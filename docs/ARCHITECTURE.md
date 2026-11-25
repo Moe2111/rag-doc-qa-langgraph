@@ -366,7 +366,7 @@ LangGraph's `PostgresSaver.setup()` creates its own checkpoint tables.
 | Malicious uploads | Magic-byte type check; size rejected before reading; pypdf only; originals never served |
 | Leaked secrets | Container Apps + GitHub secrets only; `.env` gitignored; secret scanning with push protection; OIDC deploys |
 | Error leakage | 5xx bodies carry a code and request ID only |
-| Supply chain | Locked deps; Dependabot |
+| Supply chain | Locked deps; Dependabot security alerts (version-update PRs off; upgrades done by hand) |
 
 **The limit, stated out loud:** a UUID workspace is a capability link, not authentication. The README says so.
 

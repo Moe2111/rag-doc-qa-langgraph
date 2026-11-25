@@ -449,9 +449,9 @@ LangGraph's `PostgresSaver.setup()` creates its own checkpoint tables.
 - [x] Seed `docs/GLOSSARY.md` and `docs/adr/0001–0016` from this doc
 - [x] Azure region check: Students allows only uaenorth, polandcentral, spaincentral, germanywestcentral, austriaeast → Postgres refused Germany West Central at create time; Spain Central and Poland Central work → **Spain Central**. `cae-docqa` (Container Apps environment, no log destination) created there on Nov 25
 - [x] App registrations: allowed in the tenant, so OIDC deploys are viable
-- [ ] Free Postgres offer: only visible in the portal's create flow; check while provisioning
-- [ ] Provision Postgres (Azure B1MS or Neon), enable `vector`, set the firewall
-- [ ] Keys into `backend/.env`: Anthropic (auto-reload off), Voyage, LangSmith, AWS, `DATABASE_URL`
+- [x] Free Postgres offer: checked in the portal create flow before creating
+- [x] Provision Postgres: Azure B1MS in Spain Central, PostgreSQL 18.6, `vector` 0.8.7 enabled in database `docqa`, firewall = dev IP (Nov 25). CI uses the matching `pgvector/pgvector:0.8.7-pg18` image
+- [ ] Keys into `backend/.env`: Anthropic, Voyage and `DATABASE_URL` done; LangSmith and AWS still empty (needed by T3/T4)
 - [ ] Download the three sample documents
 
 **Wed Nov 25 (evening):** T1 Scaffold and guardrails: uv project, settings, wiring stub, `/health`, ruff, pyright, pytest, import-linter, `ci.yml` with the pgvector service, `CODING_STANDARDS.md`. Done when CI is green.

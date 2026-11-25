@@ -10,7 +10,7 @@ Pinecone would hold vectors only; threads, the document list and the usage count
 
 ## Decision
 
-One Postgres with pgvector (HNSW, cosine) holds chunks, documents, threads and the daily usage counter. Hosting: Azure Flexible Server B1MS in Germany West Central if the Students subscription gets the 12-month free offer, else Neon's free tier. No paid database tier.
+One Postgres with pgvector (HNSW, cosine) holds chunks, documents, threads and the daily usage counter. Hosting: Azure Flexible Server B1MS in Spain Central if the Students subscription gets the 12-month free offer, else Neon's free tier. No paid database tier.
 
 ## Consequences
 

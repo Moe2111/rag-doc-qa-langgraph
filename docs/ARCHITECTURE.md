@@ -302,7 +302,7 @@ LangGraph's `PostgresSaver.setup()` creates its own checkpoint tables.
 | Rate limits | `slowapi`, keyed on the client IP from the rightmost `X-Forwarded-For` entry added by ACA ingress (verify in T5) | Plus the global daily cap |
 | Gates | ruff, pyright strict, pytest, import-linter | |
 | Tracing | LangSmith Developer (free) | |
-| Hosting | Azure Container Apps (consumption, Germany West Central), image on GHCR | Min 0, max 2 replicas. The Students subscription only allows uaenorth, polandcentral, spaincentral, germanywestcentral and austriaeast; GWC is the closest of these to the US-hosted Anthropic and Voyage APIs |
+| Hosting | Azure Container Apps (consumption, Spain Central), image on GHCR | Min 0, max 2 replicas. The Students subscription's policy allows five regions, but Postgres Flexible Server refuses Germany West Central at create time (dry-run validation passes, so only a real create reveals it). Spain Central works for both Postgres and Container Apps and is the closest working region to the US-hosted model APIs |
 | UI | v1's Next.js page on Vercel | |
 
 **Environment variables** (read only by `settings.py`)
@@ -379,7 +379,7 @@ LangGraph's `PostgresSaver.setup()` creates its own checkpoint tables.
 | `evals.yml` | Manual | Evals in-process against the live Postgres and models; results uploaded as an artifact |
 | Vercel Git integration | Push and PR | Frontend deploys and preview URLs |
 
-**Azure (`infra/bootstrap.sh`, Germany West Central; the API and Postgres must be in the same region):** `rg-docqa`, Container Apps environment `cae-docqa`, app `ca-docqa-api` (0.5 vCPU, 1 GiB, min 0 / max 2 replicas), and Postgres Flexible Server B1MS (32 GB, pgvector extension allow-listed).
+**Azure (`infra/bootstrap.sh`, Spain Central; the API and Postgres must be in the same region):** `rg-docqa`, Container Apps environment `cae-docqa`, app `ca-docqa-api` (0.5 vCPU, 1 GiB, min 0 / max 2 replicas), and Postgres Flexible Server B1MS (32 GB, pgvector extension allow-listed).
 
 **Deploy identity, fallback order (ADR-0010):**
 1. OIDC federated credential on the Azure for Students subscription.
@@ -447,7 +447,7 @@ LangGraph's `PostgresSaver.setup()` creates its own checkpoint tables.
 - [x] Install uv (Claude) and Docker Desktop (you)
 - [ ] `git init`, `.gitignore` (`.env`), create public repo `Moe2111/rag-doc-qa-langgraph`; first commit reviewed before pushing
 - [x] Seed `docs/GLOSSARY.md` and `docs/adr/0001–0016` from this doc
-- [x] Azure region check: Students allows only uaenorth, polandcentral, spaincentral, germanywestcentral, austriaeast → Germany West Central (Container Apps and B1MS both available there)
+- [x] Azure region check: Students allows only uaenorth, polandcentral, spaincentral, germanywestcentral, austriaeast → Postgres refused Germany West Central at create time; Spain Central and Poland Central work → **Spain Central**. `cae-docqa` (Container Apps environment, no log destination) created there on Nov 25
 - [x] App registrations: allowed in the tenant, so OIDC deploys are viable
 - [ ] Free Postgres offer: only visible in the portal's create flow; check while provisioning
 - [ ] Provision Postgres (Azure B1MS or Neon), enable `vector`, set the firewall
@@ -481,7 +481,7 @@ LangGraph's `PostgresSaver.setup()` creates its own checkpoint tables.
 | --- | --- | --- |
 | The sprint overruns | T4 open Friday morning | Cut T8; hand-deploy once if the workflow fights you; never cut the v1 baseline |
 | Students subscription limits (Postgres offer, app registrations) | Day 0 checks fail | Neon for Postgres; the deploy-identity fallback order |
-| Cross-Atlantic latency (API in Germany, model APIs in the US) | p95 well above v1 | Measured by evals; up to 5 model calls per question each add a round trip, acceptable for a demo |
+| Cross-Atlantic latency (API in Spain, model APIs in the US) | p95 well above v1 | Measured by evals; up to 5 model calls per question each add a round trip, acceptable for a demo |
 | The grader is too strict | Low refusal recall in the baseline | Tune on the golden set; one relevant passage counts as sufficient |
 | Anthropic balance runs out | A 502 on `/ask` | The daily cap, a top-up before evals, the Sonnet `low` judge |
 | A workspace filter is missing in SQL | The isolation contract test fails | All SQL in `corpus`; RLS in phase 2 |

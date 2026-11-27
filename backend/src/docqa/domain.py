@@ -1,6 +1,6 @@
 """Shared, frozen domain types. See docs/ARCHITECTURE.md and docs/GLOSSARY.md.
 
-Answering and the server add theirs in T4-T5.
+The server adds its own types in T5.
 """
 
 from datetime import datetime
@@ -52,3 +52,31 @@ class Passage(_Frozen):
     page: int | None
     text: str
     score: float
+
+
+class AskRequest(_Frozen):
+    """A question for one workspace. thread_id continues a thread; None starts one."""
+
+    workspace: WorkspaceId
+    question: str
+    thread_id: str | None = None
+    document_ids: list[DocumentId] | None = None
+
+
+class Citation(_Frozen):
+    """Marker [n] in an answer, pointing at one passage."""
+
+    n: int
+    document_id: DocumentId
+    name: str
+    page: int | None
+    snippet: str  # the first 200 characters of the passage, for display only
+
+
+class Answer(_Frozen):
+    """Either text whose every marker is a real citation, or the refusal."""
+
+    thread_id: str
+    text: str
+    refused: bool
+    citations: list[Citation]

@@ -20,14 +20,20 @@ class Settings(BaseSettings):
     aws_region: str | None = None
     s3_bucket: str | None = None
 
+    # Tracing (LangSmith). wiring.configure_tracing hands these to the langsmith client.
+    langsmith_tracing: bool = False
+    langsmith_api_key: SecretStr | None = None
+    langsmith_project: str = "docqa-v2"
+
     # Models
     docqa_writer_model: str = "claude-sonnet-5-5"
     docqa_writer_effort: Effort = "medium"
     docqa_writer_max_tokens: int = 4096
     docqa_small_model: str = "claude-haiku-5-5"
     docqa_small_effort: Effort = "low"
+    docqa_small_max_tokens: int = 4096  # thinking tokens count too; replies are short
     docqa_embedding_model: str = "voyage-4-lite"
-    docqa_embedding_dim: int = 512
+    docqa_embedding_dim: Literal[256, 512, 1024, 2048] = 512  # what Voyage can output
     docqa_judge_model: str = "claude-sonnet-5-5"
     docqa_judge_effort: Effort = "low"
 

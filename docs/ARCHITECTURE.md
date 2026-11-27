@@ -267,7 +267,7 @@ LangGraph's `PostgresSaver.setup()` creates its own checkpoint tables.
 
 **Isolation (ADR-0007):** `workspace_id` leads every primary key, and every query filters on it. All SQL lives in `corpus/postgres.py` and `quota`. A contract test proves workspace B never sees A's documents or chunks.
 
-**IDs.** `document_id` = first 16 hex chars of `sha256(workspace_id + "/" + file_name)`, so the same name in the same workspace is the same document and re-uploading replaces it. The internal thread key is `{workspace_id}/{thread_id}`, so a thread can't be reached from another workspace.
+**IDs.** `document_id` = first 16 hex chars of `sha256(workspace_id + "/" + file_name)`, with the name NFC-normalized first, so the same name in the same workspace is the same document and re-uploading replaces it. The internal thread key is `{workspace_id}/{thread_id}`, so a thread can't be reached from another workspace.
 
 **Limits.** 10 MB per file, 20 documents per workspace (`409 workspace_full`), 1,000-character questions.
 

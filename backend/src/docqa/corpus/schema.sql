@@ -1,6 +1,8 @@
--- Idempotent corpus schema, applied at startup (ADR-0015). Every table leads
--- with workspace_id so isolation is a primary-key and WHERE-clause fact (ADR-0007).
--- PostgresSaver.setup() owns the checkpoint tables; quota owns daily_usage.
+-- Idempotent app schema, applied at startup (ADR-0015). Every workspace table
+-- leads with workspace_id so isolation is a primary-key and WHERE-clause fact
+-- (ADR-0007). PostgresSaver.setup() owns the checkpoint tables; the quota module
+-- owns the daily_usage logic, but its table is created here so startup needs one
+-- schema.sql.
 
 CREATE EXTENSION IF NOT EXISTS vector;
 
@@ -28,3 +30,5 @@ CREATE TABLE IF NOT EXISTS chunks (
 );
 
 CREATE INDEX IF NOT EXISTS chunks_embedding_hnsw ON chunks USING hnsw (embedding vector_cosine_ops);
+
+CREATE TABLE IF NOT EXISTS daily_usage (day date PRIMARY KEY, questions int NOT NULL DEFAULT 0);

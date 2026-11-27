@@ -1,7 +1,6 @@
 """Shared, frozen domain types. See docs/ARCHITECTURE.md and docs/GLOSSARY.md.
 
-Only the types the corpus needs live here so far; library, answering and the
-server add theirs in T3-T5.
+Answering and the server add theirs in T4-T5.
 """
 
 from datetime import datetime
@@ -15,6 +14,14 @@ DocumentId = NewType("DocumentId", str)  # sha256(workspace_id + "/" + name)[:16
 
 class _Frozen(BaseModel):
     model_config = ConfigDict(frozen=True)
+
+
+class Upload(_Frozen):
+    """A file as received: its name, declared content type and raw bytes."""
+
+    name: str
+    content_type: str
+    data: bytes
 
 
 class DocumentInfo(_Frozen):

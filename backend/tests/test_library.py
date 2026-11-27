@@ -109,18 +109,46 @@ def _pdf(*page_texts: str | None) -> bytes:
 LONG = " ".join(f"Long version sentence {i} about access control." for i in range(300))
 
 
-def test_add_returns_info_and_stores_chunks_and_original() -> None:
-    library, corpus, blobs = _library()
+def test_add_returns_the_listed_document_info() -> None:
+    library, _, _ = _library()
 
     info = library.add(WS, _text("notes.md", LONG))
 
-    assert info.name == "notes.md"
-    assert info.pages == 1
+    assert (info.name, info.pages) == ("notes.md", 1)
     assert info.chunks > 1
-    assert len(_all_passages(corpus)) == info.chunks
-    assert all(p.page is None for p in _all_passages(corpus))
-    assert len(blobs.objects) == 1
     assert library.list(WS) == [info]
+
+
+def test_add_makes_every_chunk_searchable() -> None:
+    library, corpus, _ = _library()
+
+    info = library.add(WS, _text("notes.md", LONG))
+
+    passages = _all_passages(corpus)
+    assert len(passages) == info.chunks
+    assert {(p.document_id, p.page) for p in passages} == {(info.document_id, None)}
+
+
+def test_add_stores_the_original() -> None:
+    library, _, blobs = _library()
+
+    info = library.add(WS, _text("notes.md", "hello"))
+
+    assert blobs.objects == {
+        f"workspaces/{WS}/{info.document_id}/notes.md": (b"hello", "text/plain")
+    }
+
+
+def test_chunks_break_at_paragraphs_and_collapse_spaces() -> None:
+    library, corpus, _ = _library()
+    # Together over the 1,500-char chunk size, each under it: one chunk per paragraph.
+    first = "First paragraph   with\t extra  spaces. " * 30
+    second = "Second paragraph. " * 30
+
+    library.add(WS, _text("notes.md", f"{first}\r\n\r\n\r\n\r\n{second}"))
+
+    texts = sorted(p.text for p in _all_passages(corpus))
+    assert texts == sorted([" ".join(first.split()), " ".join(second.split())])
 
 
 def test_document_id_depends_on_workspace_and_name() -> None:
@@ -251,16 +279,36 @@ def test_remove_of_unknown_document_is_a_no_op() -> None:
     assert library.list(WS) == []
 
 
+def _fill(library: Library, ws: WorkspaceId = WS) -> None:
+    for i in range(20):
+        library.add(ws, _text(f"doc-{i}.txt", f"document {i}"))
+
+
 def test_twenty_first_document_makes_workspace_full() -> None:
     library, _, _ = _library()
-    for i in range(20):
-        library.add(WS, _text(f"doc-{i}.txt", f"document {i}"))
+    _fill(library)
 
     with pytest.raises(WorkspaceFull):
         library.add(WS, _text("doc-20.txt", "one too many"))
-    # Replacing an existing document and other workspaces are unaffected.
-    library.add(WS, _text("doc-0.txt", "a new version"))
+
+
+def test_full_workspace_still_accepts_a_replacement() -> None:
+    library, _, _ = _library()
+    _fill(library)
+
+    info = library.add(WS, _text("doc-0.txt", "a new version"))
+
+    assert len(library.list(WS)) == 20
+    assert info in library.list(WS)
+
+
+def test_a_full_workspace_does_not_limit_another() -> None:
+    library, _, _ = _library()
+    _fill(library)
+
     library.add(OTHER_WS, _text("doc-20.txt", "fine here"))
+
+    assert len(library.list(OTHER_WS)) == 1
 
 
 def test_pdf_chunks_carry_one_based_page_numbers() -> None:

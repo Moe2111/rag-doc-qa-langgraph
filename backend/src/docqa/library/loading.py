@@ -14,7 +14,8 @@ from docqa.library.errors import UnsupportedFileType
 
 Kind = Literal["pdf", "text"]
 
-_WHITESPACE = re.compile(r"\s+")
+_SPACES = re.compile(r"[^\S\n]+")  # whitespace except newlines
+_BLANK_LINES = re.compile(r"\n{3,}")
 
 
 @dataclass(frozen=True)
@@ -61,4 +62,8 @@ def _load_pdf(data: bytes) -> Loaded:
 
 
 def _clean(text: str) -> str:
-    return _WHITESPACE.sub(" ", text).strip()
+    """Collapse runs of spaces and blank lines, but keep line and paragraph breaks:
+    the splitter cuts at those before it falls back to spaces."""
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    lines = (_SPACES.sub(" ", line).strip() for line in text.split("\n"))
+    return _BLANK_LINES.sub("\n\n", "\n".join(lines)).strip()

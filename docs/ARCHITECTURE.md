@@ -85,7 +85,7 @@ Dashed edges are ports: each has a real adapter and an in-memory one.
 
 1. `server` rejects oversize bodies (by `Content-Length`, before reading) and calls `Library.add`.
 2. `library` checks the type by magic bytes and hashes the file. If the same name and hash already exist, it returns the existing `DocumentInfo`.
-3. It loads pages (pypdf for PDF, a plain read for TXT/MD), collapses whitespace and splits into chunks.
+3. It loads pages (pypdf for PDF, a plain read for TXT/MD), collapses runs of spaces and blank lines (keeping line and paragraph breaks for the splitter) and splits into chunks.
 4. It writes the original to S3 (same key per document, so a re-upload overwrites). If S3 fails, it raises and nothing else changes.
 5. It calls `Corpus.put_document`, which embeds the chunks in batches, then **in one transaction** upserts the `documents` row and replaces all of that document's chunks. If this fails, the previous version stays intact in Postgres. A newer file left in S3 is harmless because originals are never served.
 
@@ -267,7 +267,7 @@ LangGraph's `PostgresSaver.setup()` creates its own checkpoint tables.
 
 **Isolation (ADR-0007):** `workspace_id` leads every primary key, and every query filters on it. All SQL lives in `corpus/postgres.py` and `quota`. A contract test proves workspace B never sees A's documents or chunks.
 
-**IDs.** `document_id` = first 16 hex chars of `sha256(workspace_id + "/" + file_name)`, with the name NFC-normalized first, so the same name in the same workspace is the same document and re-uploading replaces it. The internal thread key is `{workspace_id}/{thread_id}`, so a thread can't be reached from another workspace.
+**IDs.** `document_id` = first 16 hex chars of `sha256(workspace_id + "/" + file_name)`, with the name NFC-normalized first (ADR-0017), so the same name in the same workspace is the same document and re-uploading replaces it. The internal thread key is `{workspace_id}/{thread_id}`, so a thread can't be reached from another workspace.
 
 **Limits.** 10 MB per file, 20 documents per workspace (`409 workspace_full`), 1,000-character questions.
 
@@ -412,6 +412,7 @@ LangGraph's `PostgresSaver.setup()` creates its own checkpoint tables.
 | 0014 | Plain SQL (psycopg + pgvector) behind `ChunkStore`, not `PGVectorStore` | Atomic re-upload and hybrid search later; less use of LangChain's vector-store abstraction |
 | 0015 | One idempotent `schema.sql` at startup | Alembic once the schema starts changing |
 | 0016 | Cost controls: prepaid balance with no auto-reload, 100 questions/day global cap, effort settings, Sonnet `low` judge | Raise the cap when the balance allows |
+| 0017 | Document names are NFC-normalized before hashing into `document_id` | One visible name is one document on every OS; other name variants stay distinct |
 
 ## Glossary
 

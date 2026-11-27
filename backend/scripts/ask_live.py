@@ -37,7 +37,13 @@ def main() -> None:
     info = Library(corpus, MemoryBlobStore()).add(ws, upload)
     print(f"ingested {info.name}: {info.pages} pages, {info.chunks} chunks")
 
-    answerer = Answerer(corpus, build_models(settings), InMemorySaver())
+    answerer = Answerer(
+        corpus,
+        build_models(settings),
+        InMemorySaver(),
+        top_k=settings.docqa_top_k,
+        max_rewrites=settings.docqa_max_rewrites,
+    )
     answer = answerer.ask(AskRequest(workspace=ws, question=args.question))
     print(answer.model_dump_json(indent=2))
     print(f"LangSmith tracing: {settings.langsmith_tracing and bool(settings.langsmith_api_key)}")

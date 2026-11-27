@@ -12,9 +12,6 @@ from docqa.answering import ClaudeModels
 from docqa.server import Services, create_app
 from docqa.settings import Settings
 
-# Thinking tokens count toward max_tokens on the small roles too; their replies are short.
-_SMALL_MAX_TOKENS = 4096
-
 
 def _required(secret: SecretStr | None, name: str) -> SecretStr:
     if secret is None:  # Settings already rejects this in live mode
@@ -57,7 +54,7 @@ def build_models(settings: Settings) -> ClaudeModels:
     )
     small = ChatAnthropic(
         model_name=settings.docqa_small_model,
-        max_tokens_to_sample=_SMALL_MAX_TOKENS,
+        max_tokens_to_sample=settings.docqa_small_max_tokens,
         output_config={"effort": settings.docqa_small_effort},
         api_key=_required(settings.anthropic_api_key, "ANTHROPIC_API_KEY"),
         timeout=None,

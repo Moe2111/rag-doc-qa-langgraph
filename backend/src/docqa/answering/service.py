@@ -46,6 +46,7 @@ class Answerer:
         turn: AnswerState = {
             "messages": [HumanMessage(request.question)],
             "workspace": request.workspace,
+            "thread_id": thread_id,
             "question": request.question,
             "search_query": "",
             "only": request.document_ids,
@@ -55,8 +56,8 @@ class Answerer:
             "draft": "",
             "answer": None,
         }
-        final = self._graph.invoke(turn, config)  # pyright: ignore[reportUnknownMemberType] Command[Unknown] in langgraph's signature
+        final = self._graph.invoke(turn, config)  # pyright: ignore[reportUnknownMemberType]  # Command[Unknown] in langgraph's signature
         answer = final["answer"]
         if answer is None:  # unreachable: every path ends in check (valid) or refuse
             raise RuntimeError("the answer graph ended without an answer")
-        return answer.model_copy(update={"thread_id": thread_id})
+        return answer

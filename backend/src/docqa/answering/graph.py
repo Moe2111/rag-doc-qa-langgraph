@@ -19,6 +19,7 @@ from docqa.domain import Answer, Citation, DocumentId, Passage, WorkspaceId
 class AnswerState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]  # the only field that persists across turns
     workspace: WorkspaceId
+    thread_id: str  # the caller's public ID, without the workspace prefix
     question: str
     search_query: str
     only: list[DocumentId] | None
@@ -33,9 +34,8 @@ type Update = dict[str, object]
 type Graph = CompiledStateGraph[AnswerState, None, AnswerState, AnswerState]
 
 
-def _answer(text: str, *, refused: bool, cited: list[Citation]) -> Update:
-    # thread_id is the caller's public ID; Answerer.ask fills it in.
-    answer = Answer(thread_id="", text=text, refused=refused, citations=cited)
+def _answer(state: AnswerState, text: str, *, refused: bool, cited: list[Citation]) -> Update:
+    answer = Answer(thread_id=state["thread_id"], text=text, refused=refused, citations=cited)
     return {"answer": answer, "messages": [AIMessage(text)]}
 
 
@@ -93,18 +93,18 @@ def build_graph(
         cited = citations.check(state["draft"], state["passages"])
         if cited is None:
             return {}
-        return _answer(state["draft"], refused=False, cited=cited)
+        return _answer(state, state["draft"], refused=False, cited=cited)
 
     def after_check(state: AnswerState) -> Literal["refuse", "__end__"]:
         return "__end__" if state["answer"] is not None else "refuse"
 
     def refuse(state: AnswerState) -> Update:
-        return _answer(citations.REFUSAL, refused=True, cited=[])
+        return _answer(state, citations.REFUSAL, refused=True, cited=[])
 
     builder = StateGraph(AnswerState)
     nodes = [contextualize, retrieve, grade, rewrite, write, check, refuse]
     for node in nodes:
-        builder.add_node(node.__name__, node)  # pyright: ignore[reportUnknownMemberType] Unknown is inside langgraph's own overloads
+        builder.add_node(node.__name__, node)  # pyright: ignore[reportUnknownMemberType]  # Unknown is inside langgraph's own overloads
     builder.add_edge(START, "contextualize")
     builder.add_edge("contextualize", "retrieve")
     builder.add_edge("retrieve", "grade")
@@ -113,4 +113,4 @@ def build_graph(
     builder.add_edge("write", "check")
     builder.add_conditional_edges("check", after_check)
     builder.add_edge("refuse", END)
-    return builder.compile(checkpointer=checkpointer)  # pyright: ignore[reportUnknownMemberType] BaseCache[Unknown] in langgraph's signature
+    return builder.compile(checkpointer=checkpointer)  # pyright: ignore[reportUnknownMemberType]  # BaseCache[Unknown] in langgraph's signature

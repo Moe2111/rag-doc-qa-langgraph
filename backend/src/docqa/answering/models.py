@@ -49,21 +49,19 @@ class ClaudeModels:
         self._writer = writer
         self._small = small
 
-    def _ask(self, model: BaseChatModel, system: str, user: str) -> AIMessage | None:
+    def _invoke(self, model: BaseChatModel, system: str, user: str) -> str | None:
+        """The reply's text, or None when the API refused."""
         message = model.invoke([SystemMessage(system), HumanMessage(user)])
-        if _refused(message):
-            return None
-        return message
+        return None if _refused(message) else message.text.strip()
 
     def contextualize(self, history: Sequence[AnyMessage], question: str) -> str:
         user = prompts.contextualize_input(history, question)
-        message = self._ask(self._small, prompts.CONTEXTUALIZE, user)
-        return (message.text.strip() if message else "") or question
+        return self._invoke(self._small, prompts.CONTEXTUALIZE, user) or question
 
     def grade(self, question: str, passages: Sequence[Passage]) -> Grade:
         messages = [
             SystemMessage(prompts.GRADE),
-            HumanMessage(prompts.grade_input(question, passages)),
+            HumanMessage(prompts.passages_input(question, passages)),
         ]
         # Native structured outputs: forced tool use is not allowed with thinking on.
         grader = self._small.with_structured_output(Grade, method="json_schema", include_raw=True)
@@ -74,10 +72,10 @@ class ClaudeModels:
 
     def rewrite(self, question: str, search_query: str) -> str:
         user = prompts.rewrite_input(question, search_query)
-        message = self._ask(self._small, prompts.REWRITE, user)
-        return (message.text.strip() if message else "") or search_query
+        return self._invoke(self._small, prompts.REWRITE, user) or search_query
 
     def write(self, question: str, passages: Sequence[Passage]) -> str:
-        message = self._ask(self._writer, prompts.WRITE, prompts.write_input(question, passages))
+        user = prompts.passages_input(question, passages)
+        text = self._invoke(self._writer, prompts.WRITE, user)
         # An API refusal is treated as NO_ANSWER (ADR-0005).
-        return message.text.strip() if message else NO_ANSWER
+        return NO_ANSWER if text is None else text

@@ -315,7 +315,7 @@ LangGraph's `PostgresSaver.setup()` creates its own checkpoint tables.
 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `S3_BUCKET` | secrets | library |
 | `LANGSMITH_TRACING`, `LANGSMITH_API_KEY`, `LANGSMITH_PROJECT` | `true`, secret, `docqa-v2` | tracing |
 | `DOCQA_WRITER_MODEL`, `DOCQA_WRITER_EFFORT`, `DOCQA_WRITER_MAX_TOKENS` | `claude-sonnet-5-5`, `medium`, `4096` | answering |
-| `DOCQA_SMALL_MODEL`, `DOCQA_SMALL_EFFORT` | `claude-haiku-5-5`, `low` | answering |
+| `DOCQA_SMALL_MODEL`, `DOCQA_SMALL_EFFORT`, `DOCQA_SMALL_MAX_TOKENS` | `claude-haiku-5-5`, `low`, `4096` | answering |
 | `DOCQA_EMBEDDING_MODEL`, `DOCQA_EMBEDDING_DIM` | `voyage-4-lite`, `512` | corpus |
 | `DOCQA_TOP_K`, `DOCQA_MAX_REWRITES` | `4`, `1` | answering |
 | `DOCQA_DAILY_QUESTION_CAP` | `100` | quota |

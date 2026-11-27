@@ -25,7 +25,7 @@ class ScriptedModels:
         self._standalone = list(standalone)
         self.contextualized: list[tuple[list[str], str]] = []
         self.graded: list[str] = []
-        self.rewritten: list[str] = []
+        self.failed_queries: list[str] = []
         self.written: list[list[Passage]] = []
 
     def contextualize(self, history: Sequence[AnyMessage], question: str) -> str:
@@ -37,7 +37,7 @@ class ScriptedModels:
         return self._grades.pop(0)
 
     def rewrite(self, question: str, search_query: str) -> str:
-        self.rewritten.append(search_query)
+        self.failed_queries.append(search_query)
         return self._rewrites.pop(0)
 
     def write(self, question: str, passages: Sequence[Passage]) -> str:

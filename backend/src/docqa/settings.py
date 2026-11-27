@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     docqa_writer_max_tokens: int = 4096
     docqa_small_model: str = "claude-haiku-5-5"
     docqa_small_effort: Effort = "low"
+    docqa_small_max_tokens: int = 4096  # thinking tokens count too; replies are short
     docqa_embedding_model: str = "voyage-4-lite"
     docqa_embedding_dim: Literal[256, 512, 1024, 2048] = 512  # what Voyage can output
     docqa_judge_model: str = "claude-sonnet-5-5"
